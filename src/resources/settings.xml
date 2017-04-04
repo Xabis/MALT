@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="100">
+		<setting label="109" type="lsep"/>
+		<setting id="malUser" type="text" default="" label="101" />
+		<setting id="malPass" type="text" option="hidden" enable="!eq(-1,)" default="" label="102" />
+		<setting label="107" type="lsep" />
+		<setting id="malAutoSync" type="bool" default="false" label="105" />
+		<setting id="malAllowUpdate" type="bool" enable="!eq(-3,)" default="true" label="106" />
+		<setting id="malUpdateOnSync" type="bool" enable="eq(-1,true) + !eq(-4,)" default="false" label="118" />
+		<setting id="malUpdateEnabled" type="bool" default="true" label="128" enable="!eq(-5,)" />
+		<setting id="malUpdateTime" type="number" default="4" label="127" enable="eq(-1,true) + !eq(-6,)" />
+	</category>
+	<category label="110">
+		<setting id="malLibraryPath" type="folder" default="" label="103" />
+		<setting id="malMinSeconds" type="number" default="120" label="104" />
+		<setting id="malUpdateAny" type="bool" default="false" label="111" />
+		<setting id="malMonitorLibrary" type="bool" default="true" label="112" />
+		<setting id="malShowPlaying" type="bool" default="true" label="125" />
+		<setting id="malShowUknown" type="bool" default="true" label="126" />
+	</category>
+	<category label="116">
+		<setting label="119" type="lsep"/>
+		<setting id="malShowProgress" type="bool" default="true" label="117" />
+		<setting id="malIndNodes" type="number" enable="eq(-1,true)" default="13" label="120" />
+		<setting id="malIndWrap" type="number" enable="eq(-2,true)" default="13" label="122" />
+		<setting id="malIndOffset" type="number" enable="eq(-3,true)" default="3" label="121" />
+		<setting label="123" type="lsep"/>
+		<setting id="malShowAvailable" type="bool" default="true" label="124" />
+	</category>
+	<category label="113">
+		<setting label="108" type="action" action="RunScript(service.maltracker, sync)"/>
+		<setting label="114" type="action" action="RunScript(service.maltracker, scan)"/>
+		<setting label="115" type="action" action="RunScript(service.maltracker, rel)"/>
+	</category>
+</settings>

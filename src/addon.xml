@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="service.maltracker" name="MyAnimeList Tracker" version="1.0.0" provider-name="Xabis">
+  <requires>
+    <import addon="xbmc.python" version="2.25.0"/>
+    <import addon="script.module.elementtree" />
+  </requires>
+  <extension point="xbmc.service" library="service.py" start="login" />
+  <extension point="xbmc.python.pluginsource" library="lister.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">Track anime watching progress using MyAnimeList services.</summary>
+    <description lang="en">MALT creates and manages a virtual anime library within Kodi, which tracks what shows you are currently watching, plan to watch, already completed, etc. Automatically finds and identifies episodes in your library, and marks which shows are ready for play, based on your watch progress. Once an episode is finished, the progress can be automatically synced with MAL, or updated offline and then synced to MAL later, or not at all.</description>
+    <disclaimer lang="en">Requires a MyAnimeList account to download and manage active show subscriptions.</disclaimer>
+    <assets>
+      <icon>resources/icon.png</icon>
+    </assets>
+  </extension>
+</addon>
