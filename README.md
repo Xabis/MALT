@@ -5,18 +5,31 @@ MALT requires an account on MyAnimeList, populated with shows that you are watch
 
 Once you have synced your shows, MALT will work completely offline. You can set it to send updates as soon you finish watching, wait until a sync happens, or never send updates at all.
 
+Show Listing
+![Show List](https://raw.github.com/Xabis/MALT/master/site/list.png)
+
+Show Categories
+![Show Catetories](https://raw.github.com/Xabis/MALT/master/site/list2.png)
+
+
 # Watching progress indicator
 When browsing your collection, a simple indicator will appear in the description to show which episodes have been watched, which episodes have a video in the library ready to play, and what you are missing.
+![Indicator](https://raw.github.com/Xabis/MALT/master/site/indicator.png)
 
 You may customize the indicator to show more/less episodes, and specify how the blocks wrap
+![Indicator](https://raw.github.com/Xabis/MALT/master/site/indicator2.png)
 
 # Built-in sorting for when a show was last updated
 By default, your lists are sorted alphabetically.
 
 If want to sort by when you last updated the show, such as after you finish watching an episode, then simply change the sort to "Last Played".
 
+![Menu](https://raw.github.com/Xabis/MALT/master/site/lastplayed.png)
+
 # Manually increment or decrement progress for a show
 Sometimes you may need to change the progress of a show manually. You can do this by opening the context menu for the show and choose the Increment/Decrement options.
+
+![Menu](https://raw.github.com/Xabis/MALT/master/site/contextmenu.png)
 
 # Automatic Season Detection
 Some shows split seasons across different database entries, yet typically subbers will not start the episode numbering over from the start. In these situations, a 3rd party season relationship mapping is used to match these episodes the correct entry.
@@ -35,6 +48,8 @@ MAL provides the following titles for the show "Active Raid":
     Active Raid: Special Public Security Fifth Division Third Mobile Assault Eighth Unit
     
 If the video files are named "Active Raid", then those files will not be recognized and will appear missing in the episode indicator. Simply adding "Active Raid" as a custom synonym will allow them to be detected. You may access this feature from the show's context menu.
+
+![Entry](https://raw.github.com/Xabis/MALT/master/site/synentry.png)
 
 # Credit
 Much of the recognition system was heavily based on [Taiga](https://github.com/erengy/taiga), and its related project, [Anitomy](https://github.com/erengy/anitomy).
