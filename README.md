@@ -5,10 +5,8 @@ MALT requires an account on MyAnimeList, populated with shows that you are watch
 
 Once you have synced your shows, MALT will work completely offline. You can set it to send updates as soon you finish watching, wait until a sync happens, or never send updates at all.
 
-Show Listing
 ![Show List](https://raw.github.com/Xabis/MALT/master/site/list.png)
 
-Show Categories
 ![Show Catetories](https://raw.github.com/Xabis/MALT/master/site/list2.png)
 
 
