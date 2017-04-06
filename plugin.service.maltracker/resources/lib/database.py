@@ -771,6 +771,8 @@ class AnimeDatabase(object):
 
     @library.setter
     def library(self, value):
+        # Force unicode for the library path, so that os walk returns unicode strings
+        value = unicode(value)
         if value != self._library:
             self._library = value
 

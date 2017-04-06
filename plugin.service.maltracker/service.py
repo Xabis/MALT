@@ -113,6 +113,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         password =  __addon__.getSetting("malPass")
         libpath = __addon__.getSetting("malLibraryPath")
         sync = False
+        self._badauth = not user or not password  # Set initial state, based on if these are filled in
 
         # Emit a notification error, if the library path is no longer valid
         if libpath and not os.path.isdir(libpath):
