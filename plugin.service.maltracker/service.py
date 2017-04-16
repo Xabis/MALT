@@ -222,6 +222,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         #   This prevents skipping ahead or going back
         if self._lastepisode == (self._lastanime.watched + 1):
             self.updatewatched(self._lastanime, self._lastepisode, True)
+            xbmc.executebuiltin('Container.Refresh()')
 
     def on_created(self, event):
         """WATCHDOG: A file was created"""
