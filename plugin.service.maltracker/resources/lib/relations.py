@@ -30,16 +30,18 @@ class Rule(object):
             return 0
 
     def populate(self, match):
-        self.srcstart = Rule.safeint(match.group(3))
-        self.srcend = Rule.safeint(match.group(4))
-        self.destid = match.group(5)
-        self.deststart = Rule.safeint(match.group(7))
-        self.destend = Rule.safeint(match.group(8))
+        destmal, destkit, destadb = match.group(4).split("|")
+
+        self.srcstart = Rule.safeint(match.group(2))
+        self.srcend = Rule.safeint(match.group(3))
+        self.destid = destmal
+        self.deststart = Rule.safeint(match.group(5))
+        self.destend = Rule.safeint(match.group(6))
 
 
 class Relationships(object):
     """Keeps a list of episode redirection rules, used when fansubbers do not restart episode numbers over, across one or more cours"""
-    _re_ruleset = re.compile("(\d+|[?~])\|(\d+|[?~]):(\d+)(?:-(\d+|\?))? -> (\d+|[?~])\|(\d+|[?~]):(\d+)(?:-(\d+|\?))?(!)?")
+    _re_ruleset = re.compile("((?:\d+|[?~])(?:\|(?:\d+|[?~]))*):(\d+)(?:-(\d+|\?))? -> ((?:\d+|[?~])(?:\|(?:\d+|[?~]))*):(\d+)(?:-(\d+|\?))?(!)?")
     rules = {}
     meta = {}
 
@@ -95,11 +97,14 @@ class Relationships(object):
                 raw = line[2:]
                 m = Relationships._re_ruleset.match(raw)
                 if m:
+                    srcmal, srckit, srcadb = m.group(1).split("|")
+                    destmal, destkit, destadb = m.group(4).split("|")
+
                     # Create the rule
-                    Relationships.rules[m.group(1)] = Rule(m)
+                    Relationships.rules[srcmal] = Rule(m)
                     # If the rule requires a self-redirect, then create it now
-                    if m.group(9) == "!":
-                        Relationships.rules[m.group(5)] = Rule(m)
+                    if m.group(7) == "!":
+                        Relationships.rules[destmal] = Rule(m)
                 elif ":" in raw:
                     # Meta data
                     key, value = raw.split(": ")
