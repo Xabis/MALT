@@ -52,7 +52,8 @@
 	<string id="220">Update failed.</string>
 	<string id="221">Now playing '{0}' {1}/{2}</string>
 	<string id="222">Unable to retrieve synopsis information from the server.</string>
-
+	<string id="223">Error updating relationship info; season pairing will be unavailable.</string>
+	
 	<!-- GUI -->
 	<string id="300">Increase progress to #{0}</string>
 	<string id="301">Decrease progress to #{0}</string>

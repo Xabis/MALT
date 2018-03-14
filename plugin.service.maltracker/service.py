@@ -120,23 +120,27 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
             notify(getstring(207), 2)  # folder is invalid
 
         # Build the relative episode relationship database
-        rel_needsupdate = True
-        if Relationships.load(__relfile__):
-            rel_last = __addon__.getSetting("malRelLastUpdate")
-            if rel_last:
-                try:
-                    # The relationships file doesnt update very often, so only download a fresh copy every couple days.
-                    # No need to spam.
-                    rel_date = datetime.datetime.strptime(rel_last, "%Y-%m-%d")
-                    days = (datetime.datetime.now() - rel_date).days
-                    if days < 3:
-                        rel_needsupdate = False
-                except:
-                    pass
+        try:
+            rel_needsupdate = True
+            if Relationships.load(__relfile__):
+                rel_last = __addon__.getSetting("malRelLastUpdate")
+                if rel_last:
+                    try:
+                        # The relationships file doesnt update very often, so only download a fresh copy every couple days.
+                        # No need to spam.
+                        rel_date = datetime.datetime.strptime(rel_last, "%Y-%m-%d")
+                        days = (datetime.datetime.now() - rel_date).days
+                        if days < 3:
+                            rel_needsupdate = False
+                    except:
+                        pass
 
-        # If updating, then grab the latest copy from github, then mark the date
-        if rel_needsupdate and Relationships.update(__relfile__):
-            __addon__.setSetting("malRelLastUpdate", datetime.datetime.now().strftime("%Y-%m-%d"))
+            # If updating, then grab the latest copy from github, then mark the date
+            if rel_needsupdate and Relationships.update(__relfile__):
+                __addon__.setSetting("malRelLastUpdate", datetime.datetime.now().strftime("%Y-%m-%d"))
+        except:
+            # something went wrong while parsing the relationship data. notify the user that season pairing will be off.
+            notify(getstring(223), 2)
 
         # Create the video database
         self._db = AnimeDatabase(__dbfile__, user, password, libpath)
