@@ -1,0 +1,312 @@
+{
+    "source": "mockoon:1.7.0",
+    "data": [
+        {
+            "type": "environment",
+            "item": {
+                "uuid": "",
+                "lastMigration": 9,
+                "name": "MALT",
+                "endpointPrefix": "",
+                "latency": 0,
+                "port": 3000,
+                "routes": [
+                    {
+                        "uuid": "",
+                        "documentation": "ANILIST - Main graphql endpoint",
+                        "method": "post",
+                        "endpoint": "graphql",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\r\n    \"errors\": [\r\n        {\r\n            \"message\": \"Request not recognized in this mock\",\r\n            \"status\": 400\r\n        }\r\n    ],\r\n    \"data\": null\r\n}",
+                                "latency": 0,
+                                "statusCode": "400",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            },
+                            {
+                                "uuid": "",
+                                "body": "{\r\n\t\"data\": {\r\n\t\t\"Page\": {\r\n\t\t\t\"pageInfo\": {\r\n\t\t\t\t\"currentPage\": 2,\r\n\t\t\t\t\"lastPage\": 3,\r\n\t\t\t\t\"hasNextPage\": true\r\n\t\t\t},\r\n\t\t\t\"mediaList\": [{\r\n\t\t\t\t\"status\": \"CURRENT\",\r\n\t\t\t\t\"progress\": 923,\r\n\t\t\t\t\"score\": 0,\r\n\t\t\t\t\"startedAt\": {\r\n\t\t\t\t\t\"year\": null,\r\n\t\t\t\t\t\"month\": null,\r\n\t\t\t\t\t\"day\": null\r\n\t\t\t\t},\r\n\t\t\t\t\"completedAt\": {\r\n\t\t\t\t\t\"year\": null,\r\n\t\t\t\t\t\"month\": null,\r\n\t\t\t\t\t\"day\": null\r\n\t\t\t\t},\r\n\t\t\t\t\"updatedAt\": 1582501344,\r\n\t\t\t\t\"media\": {\r\n\t\t\t\t\t\"id\": 21,\r\n\t\t\t\t\t\"format\": \"TV\",\r\n\t\t\t\t\t\"title\": {\r\n\t\t\t\t\t\t\"userPreferred\": \"One Piece\",\r\n\t\t\t\t\t\t\"romaji\": \"One Piece\"\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"status\": \"RELEASING\",\r\n\t\t\t\t\t\"description\": \"Gol D. Roger was known as the Pirate King, the strongest and most infamous being to have sailed the Grand Line. The capture and death of Roger by the World Government brought a change throughout the world. His last words before his death revealed the location of the greatest treasure in the world, One Piece. It was this revelation that brought about the Grand Age of Pirates, men who dreamed of finding One Piece (which promises an unlimited amount of riches and fame), and quite possibly the most coveted of titles for the person who found it, the title of the Pirate King.<br><br>\\nEnter Monkey D. Luffy, a 17-year-old boy that defies your standard definition of a pirate. Rather than the popular persona of a wicked, hardened, toothless pirate who ransacks villages for fun, Luffy\\u2019s reason for being a pirate is one of pure wonder; the thought of an exciting adventure and meeting new and intriguing people, along with finding One Piece, are his reasons of becoming a pirate. Following in the footsteps of his childhood hero, Luffy and his crew travel across the Grand Line, experiencing crazy adventures, unveiling dark mysteries and battling strong enemies, all in order to reach One Piece.<br><br>\\n(Source: MyAnimeList)\\n<br><br>\\n<b>*This includes following special episodes:<\\/b><br>\\n- The Strongest Tag-Team! Luffy and Toriko's Hard Struggle! (Episode 492)<br>\\n- Team Formation! Save Chopper (Episode 542)<br>\\n- History's Strongest Collaboration vs. Glutton of the Sea (Episode 590)<br>\\n- 20th Anniversary! Special Romance Dawn (Episode 907)\",\r\n\t\t\t\t\t\"episodes\": null,\r\n\t\t\t\t\t\"coverImage\": {\r\n\t\t\t\t\t\t\"medium\": \"https:\\/\\/s4.anilist.co\\/file\\/anilistcdn\\/media\\/anime\\/cover\\/small\\/nx21-tXMN3Y20PIL9.jpg\"\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"synonyms\": [],\r\n\t\t\t\t\t\"startDate\": {\r\n\t\t\t\t\t\t\"year\": 1999,\r\n\t\t\t\t\t\t\"month\": 10,\r\n\t\t\t\t\t\t\"day\": 20\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"endDate\": {\r\n\t\t\t\t\t\t\"year\": null,\r\n\t\t\t\t\t\t\"month\": null,\r\n\t\t\t\t\t\t\"day\": null\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"nextAiringEpisode\": {\r\n\t\t\t\t\t\t\"airingAt\": 1584232200\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n            }\r\n        }\r\n    }\r\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Fetch - Page 2",
+                                "headers": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": true,
+                                "rules": [
+                                    {
+                                        "target": "body",
+                                        "modifier": "variables.page",
+                                        "value": "^2$",
+                                        "isRegex": true
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "",
+                                "body": "{\r\n\t\"data\": {\r\n\t\t\"Page\": {\r\n\t\t\t\"pageInfo\": {\r\n\t\t\t\t\"currentPage\": 3,\r\n\t\t\t\t\"lastPage\": 3,\r\n\t\t\t\t\"hasNextPage\": false\r\n\t\t\t},\r\n\t\t\t\"mediaList\": [{\r\n\t\t\t\t\"status\": \"PLANNING\",\r\n\t\t\t\t\"progress\": 0,\r\n\t\t\t\t\"score\": 0,\r\n\t\t\t\t\"startedAt\": {\r\n\t\t\t\t\t\"year\": null,\r\n\t\t\t\t\t\"month\": null,\r\n\t\t\t\t\t\"day\": null\r\n\t\t\t\t},\r\n\t\t\t\t\"completedAt\": {\r\n\t\t\t\t\t\"year\": null,\r\n\t\t\t\t\t\"month\": null,\r\n\t\t\t\t\t\"day\": null\r\n\t\t\t\t},\r\n\t\t\t\t\"updatedAt\": 1552961839,\r\n\t\t\t\t\"media\": {\r\n\t\t\t\t\t\"id\": 108511,\r\n\t\t\t\t\t\"format\": \"TV\",\r\n\t\t\t\t\t\"title\": {\r\n\t\t\t\t\t\t\"userPreferred\": \"Tensei Shitara Slime Datta Ken 2nd Season\",\r\n\t\t\t\t\t\t\"romaji\": \"Tensei Shitara Slime Datta Ken 2nd Season\"\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"status\": \"NOT_YET_RELEASED\",\r\n\t\t\t\t\t\"description\": \"The second season of <i>Tensei Shitara Slime Datta Ken<\\/i>.\",\r\n\t\t\t\t\t\"episodes\": null,\r\n\t\t\t\t\t\"coverImage\": {\r\n\t\t\t\t\t\t\"medium\": \"https:\\/\\/s4.anilist.co\\/file\\/anilistcdn\\/media\\/anime\\/cover\\/small\\/bx108511-M7wH0RMCeDnA.jpg\"\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"synonyms\": [\"\\u8ee2\\u30b9\\u30e92\", \"TenSura 2\"],\r\n\t\t\t\t\t\"startDate\": {\r\n\t\t\t\t\t\t\"year\": 2020,\r\n\t\t\t\t\t\t\"month\": 10,\r\n\t\t\t\t\t\t\"day\": null\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"endDate\": {\r\n\t\t\t\t\t\t\"year\": null,\r\n\t\t\t\t\t\t\"month\": null,\r\n\t\t\t\t\t\t\"day\": null\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"nextAiringEpisode\": null\r\n\t\t\t\t}\r\n            }\r\n        }\r\n    }\r\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Fetch - Page 3",
+                                "headers": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": true,
+                                "rules": [
+                                    {
+                                        "target": "body",
+                                        "modifier": "variables.page",
+                                        "value": "^3$",
+                                        "isRegex": true
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Fetch - Page 1",
+                                "headers": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": true,
+                                "rules": [
+                                    {
+                                        "target": "body",
+                                        "modifier": "variables.listType",
+                                        "value": "ANIME",
+                                        "isRegex": false
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "",
+                                "body": "{\r\n    \"data\": {\r\n        \"SaveMediaListEntry\": {\r\n            \"mediaId\": {{ body 'variables.id' 0 }},\r\n            \"progress\": {{ body 'variables.progress' 0 }},\r\n            \"status\": \"{{ body 'variables.status' 'CURRENT' }}\"\r\n        }\r\n    }\r\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Pushing a progress update",
+                                "headers": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": [
+                                    {
+                                        "target": "body",
+                                        "modifier": "variables.progress",
+                                        "value": "^[\\d]+$",
+                                        "isRegex": true
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "",
+                                "body": "{\r\n    \"errors\": [\r\n        {\r\n            \"message\": \"Variable \\\"$id\\\" got invalid value \\\"this will error\\\"; Expected type Int; Int cannot represent non 32-bit signed integer value: this will error\",\r\n            \"status\": 400\r\n        }\r\n    ],\r\n    \"data\": null\r\n}",
+                                "latency": 0,
+                                "statusCode": "400",
+                                "label": "Example of a query fail",
+                                "headers": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": [
+                                    {
+                                        "target": "body",
+                                        "modifier": "variables.progress",
+                                        "value": "[\\w]+",
+                                        "isRegex": true
+                                    }
+                                ]
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "MAL (Original) - Main List Fetch",
+                        "method": "get",
+                        "endpoint": "malappinfo.php",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<myanimelist>\r\n    <myinfo>\r\n        <user_id>9999999</user_id>\r\n        <user_name>User</user_name>\r\n        <user_watching>1</user_watching>\r\n        <user_completed>1</user_completed>\r\n        <user_onhold>0</user_onhold>\r\n        <user_dropped>0</user_dropped>\r\n        <user_plantowatch>1</user_plantowatch>\r\n        <user_days_spent_watching>999.00</user_days_spent_watching>\r\n    </myinfo>\r\n    <anime>\r\n        <series_animedb_id>1</series_animedb_id>\r\n        <series_title>Cowboy Bebop</series_title>\r\n        <series_synonyms>; Cowboy Bebop</series_synonyms>\r\n        <series_type>1</series_type>\r\n        <series_episodes>26</series_episodes>\r\n        <series_status>2</series_status>\r\n        <series_start>1998-04-03</series_start>\r\n        <series_end>1999-04-24</series_end>\r\n        <series_image>https://myanimelist.cdn-dena.com/images/anime/4/19644.jpg</series_image>\r\n        <my_id>0</my_id>\r\n        <my_watched_episodes>26</my_watched_episodes>\r\n        <my_start_date>0000-00-00</my_start_date>\r\n        <my_finish_date>0000-00-00</my_finish_date>\r\n        <my_score>0</my_score>\r\n        <my_status>2</my_status>\r\n        <my_rewatching>0</my_rewatching>\r\n        <my_rewatching_ep>0</my_rewatching_ep>\r\n        <my_last_updated>1427769939</my_last_updated>\r\n        <my_tags/>\r\n    </anime>\r\n    <anime>\r\n        <series_animedb_id>15</series_animedb_id>\r\n        <series_title>Eyeshield 21</series_title>\r\n        <series_synonyms>Eyeshield21</series_synonyms>\r\n        <series_type>1</series_type>\r\n        <series_episodes>145</series_episodes>\r\n        <series_status>2</series_status>\r\n        <series_start>2005-04-06</series_start>\r\n        <series_end>2008-03-19</series_end>\r\n        <series_image>https://myanimelist.cdn-dena.com/images/anime/12/66961.jpg</series_image>\r\n        <my_id>0</my_id>\r\n        <my_watched_episodes>106</my_watched_episodes>\r\n        <my_start_date>2015-05-10</my_start_date>\r\n        <my_finish_date>0000-00-00</my_finish_date>\r\n        <my_score>0</my_score>\r\n        <my_status>1</my_status>\r\n        <my_rewatching>0</my_rewatching>\r\n        <my_rewatching_ep>0</my_rewatching_ep>\r\n        <my_last_updated>1438821414</my_last_updated>\r\n        <my_tags/>\r\n    </anime>\r\n    <anime>\r\n        <series_animedb_id>28701</series_animedb_id>\r\n        <series_title>Fate/stay night: Unlimited Blade Works 2nd Season</series_title>\r\n        <series_synonyms>Fate/stay night (2015); Fate - Stay Night</series_synonyms>\r\n        <series_type>1</series_type>\r\n        <series_episodes>13</series_episodes>\r\n        <series_status>2</series_status>\r\n        <series_start>2015-04-05</series_start>\r\n        <series_end>2015-06-28</series_end>\r\n        <series_image>https://myanimelist.cdn-dena.com/images/anime/11/72863.jpg</series_image>\r\n        <my_id>0</my_id>\r\n        <my_watched_episodes>0</my_watched_episodes>\r\n        <my_start_date>0000-00-00</my_start_date>\r\n        <my_finish_date>0000-00-00</my_finish_date>\r\n        <my_score>0</my_score>\r\n        <my_status>6</my_status>\r\n        <my_rewatching>0</my_rewatching>\r\n        <my_rewatching_ep>0</my_rewatching_ep>\r\n        <my_last_updated>1424318848</my_last_updated>\r\n        <my_tags/>\r\n    </anime>\r\n</myanimelist>",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Main list",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/xml"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "MAL (Original) - Search",
+                        "method": "get",
+                        "endpoint": "api/anime/search.xml",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "400",
+                                "label": "Bad Search",
+                                "headers": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            },
+                            {
+                                "uuid": "",
+                                "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<anime>\r\n  <entry>\r\n    <id>1</id>\r\n    <title>Cowboy Bebop</title>\r\n    <english>Cowboy Bebop</english>\r\n    <synonyms>; Cowboy Bebop</synonyms>\r\n    <episodes>26</episodes>\r\n    <score>8.79</score>\r\n    <type>TV</type>\r\n    <status>Finished Airing</status>\r\n    <start_date>1998-04-03</start_date>\r\n    <end_date>1999-04-24</end_date>\r\n    <synopsis>In the year 2071, humanity has colonized several of the planets and moons of the solar system leaving the now uninhabitable surface of planet Earth behind. The Inter Solar System Police attempts to keep peace in the galaxy, aided in part by outlaw bounty hunters, referred to as \"Cowboys.\" The ragtag team aboard the spaceship Bebop are two such individuals.&lt;br /&gt;\r\n&lt;br /&gt;\r\nMellow and carefree Spike Spiegel is balanced by his boisterous, pragmatic partner Jet Black as the pair makes a living chasing bounties and collecting rewards. Thrown off course by the addition of new members that they meet in their travels—Ein, a genetically engineered, highly intelligent Welsh Corgi; femme fatale Faye Valentine, an enigmatic trickster with memory loss; and the strange computer whiz kid Edward Wong—the crew embarks on thrilling adventures that unravel each member's dark and mysterious past little by little.&lt;br /&gt;\r\n&lt;br /&gt;\r\nWell-balanced with high density action and light-hearted comedy, Cowboy Bebop is a space Western classic and an homage to the smooth and improvised music it is named after.&lt;br /&gt;\r\n&lt;br /&gt;\r\n[Written by MAL Rewrite]</synopsis>\r\n    <image>https://cdn.myanimelist.net/images/anime/4/19644.jpg</image>\r\n  </entry>\r\n</anime>",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Search for \"Cowboy Bebop\"",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/xml"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": [
+                                    {
+                                        "target": "query",
+                                        "modifier": "q",
+                                        "value": "Cowboy Bebop",
+                                        "isRegex": false
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "",
+                                "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<anime>\r\n  <entry>\r\n    <id>15</id>\r\n    <title>Eyeshield 21</title>\r\n    <english>Eyeshield 21</english>\r\n    <synonyms>Eyeshield21</synonyms>\r\n    <episodes>145</episodes>\r\n    <score>8.00</score>\r\n    <type>TV</type>\r\n    <status>Finished Airing</status>\r\n    <start_date>2005-04-06</start_date>\r\n    <end_date>2008-03-19</end_date>\r\n    <synopsis>Sena is like any other shy kid starting high school; he's just trying to survive. Constantly bullied, he's accustomed to running away.&lt;br /&gt;\r\n&lt;br /&gt;\r\nSurviving high school is about to become a lot more difficult after Hiruma, captain of the school's American football team, witnesses Sena's incredible agility and speed during an escape from some bullies. Hiruma schemes to make Sena the running back of his school team, The Devil Bats, hoping that it will turn around the squad's fortunes from being the laughingstock of Japan's high school leagues, to title contender.&lt;br /&gt;\r\n&lt;br /&gt;\r\nTo protect his precious star player from rivaling recruiters, he enlists Sena as \"team secretary,\" giving him a visored helmet and the nickname \"Eyeshield 21\" to hide his identity.&lt;br /&gt;\r\n&lt;br /&gt;\r\nThe Devilbats will look to make their way to the Christmas Bowl, an annual tournament attended by the best football teams in Japan, with \"Eyeshield 21\" leading the way. Will they be able to win the Christmas Bowl? Will Sena be able to transform from a timid, undersized freshman to an all-star player? Put on your pads and helmet to find out!</synopsis>\r\n    <image>https://cdn.myanimelist.net/images/anime/12/66961.jpg</image>\r\n  </entry>\r\n</anime>",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Search for \"Eyeshield 21\"",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/xml"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": [
+                                    {
+                                        "target": "query",
+                                        "modifier": "q",
+                                        "value": "Eyeshield 21",
+                                        "isRegex": false
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "",
+                                "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<anime>\r\n  <entry>\r\n    <id>28701</id>\r\n    <title>Fate/stay night: Unlimited Blade Works 2nd Season</title>\r\n    <english>Fate/stay night: Unlimited Blade Works 2nd Season</english>\r\n    <synonyms>Fate/stay night (2015); Fate - Stay Night</synonyms>\r\n    <episodes>13</episodes>\r\n    <score>8.36</score>\r\n    <type>TV</type>\r\n    <status>Finished Airing</status>\r\n    <start_date>2015-04-05</start_date>\r\n    <end_date>2015-06-28</end_date>\r\n    <synopsis>In the midst of the Fifth Holy Grail War, Caster sets her plans into motion, beginning with the capture of Shirou's Servant Saber. With the witch growing ever more powerful, Rin and Archer determine she is a threat that must be dealt with at once. But as the balance of power in the war begins to shift, the Master and Servant find themselves walking separate ways.&lt;br /&gt;\r\n&lt;br /&gt;\r\nMeanwhile, despite losing his Servant and stumbling from injuries, Shirou ignores Rin's warning to abandon the battle royale, forcing his way into the fight against Caster. Determined to show his resolve in his will to fight, Shirou's potential to become a protector of the people is put to the test.&lt;br /&gt;\r\n&lt;br /&gt;\r\nAmidst the bloodshed and chaos, the motivations of each Master and Servant are slowly revealed as they sacrifice everything in order to arise as the victor and claim the Holy Grail.&lt;br /&gt;\r\n&lt;br /&gt;\r\n[Written by MAL Rewrite]</synopsis>\r\n    <image>https://cdn.myanimelist.net/images/anime/11/72863.jpg</image>\r\n  </entry>\r\n</anime>",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Search for \"Fate/stay night: Unlimited Blade Works 2nd Season\"",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/xml"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": [
+                                    {
+                                        "target": "query",
+                                        "modifier": "q",
+                                        "value": "Fate/stay night: Unlimited Blade Works 2nd Season",
+                                        "isRegex": false
+                                    }
+                                ]
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "MAL (Original) - Push update to server",
+                        "method": "post",
+                        "endpoint": "api/animelist/update/:id.xml",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "Updated",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "Always return update success",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/html"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    }
+                ],
+                "proxyMode": false,
+                "proxyHost": "",
+                "https": false,
+                "cors": true,
+                "headers": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ]
+            }
+        }
+    ]
+}

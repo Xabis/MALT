@@ -7,10 +7,10 @@
 	<string id="103">Library folder</string>
 	<string id="104">Minimum play time before treating as watched (seconds)</string>
 	<string id="105">Automatically sync at startup</string>
-	<string id="106">Automatically update watching progress on MAL</string>
+	<string id="106">Allow list updates to be sent to the service</string>
 	<string id="107">Sync &amp; Update</string>
 	<string id="108">Sync now</string>
-	<string id="109">MAL Credentials</string>
+	<string id="109">Credentials</string>
 	<string id="110">Library</string>
 	<string id="111">Track files played outside library folder</string>
 	<string id="112">Monitor library folder for new media</string>
@@ -19,41 +19,45 @@
 	<string id="115">Update relationship data</string>
 	<string id="116">Display</string>
 	<string id="117">Enable indicator</string>
-	<string id="118">Hold updates until a sync, instead of immediately</string>
+	<string id="118">Sync episode progress immediately after a change</string>
 	<string id="119">Episode progress indicator</string>
-	<string id="120">Maximum episodes to display</string>
-	<string id="121">Minimum number of watched episodes</string>
+	<string id="120">Maximum episode blocks to display</string>
+	<string id="121">Minimum number of watched episode blocks</string>
 	<string id="122">Wrap threshold</string>
 	<string id="123">Video List</string>
 	<string id="124">Highlight shows with available episodes</string>
 	<string id="125">Notify when playing a recognized video</string>
 	<string id="126">Notify when playing a video that is not in the database</string>
 	<string id="127">Minimum seconds to wait between requests</string>
-	<string id="128">Fetch synopsis information for shows that need it</string>
+	<string id="128">Allow service to fetch extra info for shows that need it</string>
+	<string id="129">List Service</string>
+	<string id="130">Token</string>
+	<string id="131">Request Permission</string>
 
 	<!-- Error/Notifications -->
-	<string id="200">MAL: Username or Password invalid.</string>
-	<string id="202">There are no anime entries in the database. Would you like to sync with MAL now?</string>
+	<string id="200">Service: Authentication invalid.</string>
+	<string id="202">There are no anime entries in the database. Would you like to sync now?</string>
 	<string id="203">Unable to sync the database. Please check your internet connection and try again.</string>
 	<string id="204">Unable to write the database state information. Video listings will not appear or will be out of date. Either restart Kodi or force a resync to retry.</string>
-	<string id="205">MAL: no password set.</string>
-	<string id="206">A new user was set. Would you like to sync with MAL now?</string>
+	<string id="205">Service: Authentication incomplete.</string>
+	<string id="206">New credentials were set. Would you like to sync with the list service now?</string>
 	<string id="207">Library folder can no longer be found or is invalid. Please open the settings and check that it is pointing to the correct location.</string>
 	<string id="208">An error occurred while reading the database.</string>
 	<string id="209">Syncing anime database...</string>
 	<string id="210">Library monitoring is currently unavailable.</string>
 	<string id="211">Database service is not ready.</string>
-	<string id="212">Unable to sync because there is no user set.</string>
+	<string id="212">Unable to sync because the authentication information is not valid.</string>
 	<string id="213">Unable to find '{0}' in the database.</string>
-	<string id="214">MAL: Update failed (Bad Request)</string>
-	<string id="215">MAL: Update failed (Unknown Error)</string>
+	<string id="214">Service: Update failed (Bad Request)</string>
+	<string id="215">Service: Update failed (Unknown Error)</string>
 	<string id="216">Scanning for new episodes...</string>
 	<string id="218">Updating relationship database...</string>
 	<string id="220">Update failed.</string>
 	<string id="221">Now playing '{0}' {1}/{2}</string>
 	<string id="222">Unable to retrieve synopsis information from the server.</string>
 	<string id="223">Error updating relationship info; season pairing will be unavailable.</string>
-	
+	<string id="224">Invalid service set. Resetting to the default.</string>
+
 	<!-- GUI -->
 	<string id="300">Increase progress to #{0}</string>
 	<string id="301">Decrease progress to #{0}</string>
@@ -71,7 +75,7 @@
 	<string id="313">All shows marked as planning to watch</string>
 	<string id="314">Set Status...</string>
 	<string id="315">Status for {0}:</string>
-	<string id="316">Welcome to MAL Tracker</string>
+	<string id="316">Welcome to MALT</string>
 	<string id="317">To begin, you will need to enter your user name and location to where your media files are stored.[CR][CR]Would you like to open the settings now?</string>
 	<string id="318">Edit Title Synonyms...</string>
 	<string id="319">Clear Title Synonyms</string>
@@ -89,4 +93,10 @@
 	<string id="331">Fetching anime info</string>
 	<string id="332">There were too many failed attempts to retrieve info from the server. The synopsis fetching setting has been turned off. You will need to renable it to try again.</string>
 	<string id="333">An error occurred while updating. Attempt {0}/{1}</string>
+	<string id="334">Service Authentication</string>
+	<string id="335">A web browser will be opened to complete application OAuth authentication with the service.[CR][CR]Would you like to continue?</string>
+	<string id="336">The web browser could not be opened. Please ensure that your device is properly configured.</string>
+	<string id="337">Once you have accepted the MALT application, copy the generated token, and paste it into the token setting to complete.</string>
+	<string id="338">If you change services, the local database will be cleared and all queued updates will be lost.[CR][CR]Do you wish to proceed?</string>
+	<string id="339">Please fill in authentication information for the service, then sync the database in the action section, inside settings.</string>
 </strings>

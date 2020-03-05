@@ -14,6 +14,10 @@ from threading import Thread, Event, Lock
 from resources.lib.database import AnimeDatabase
 from resources.lib.relations import Relationships
 from resources.lib.util import int2
+from resources.lib.service.base import AnimeService
+from resources.lib.service.mal import MALService
+from resources.lib.service.anilist import ALService
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -25,11 +29,11 @@ __addonid__   = __addon__.getAddonInfo('id')
 __addonname__ = __addon__.getAddonInfo('name')
 __profile__   = xbmc.translatePath(__addon__.getAddonInfo("profile"))
 __path__      = xbmc.translatePath(__addon__.getAddonInfo("path"))
-__dbfile__    = os.path.join(__profile__, 'db.xml')
 __relfile__   = os.path.join(__profile__, 'rel.txt')
 __picklejar__ = os.path.join(__profile__, 'db.bin')
 __ipc__       = xbmcgui.Window(10000)  # command ipc marshaller
-
+__services__  = {"anilist.co": ALService, "myanimelist.com": MALService}
+__svc_def__   = "anilist.co"
 
 def log(text):
     # Convert text to plain ascii, otherwise kodi will raise an exception
@@ -51,19 +55,19 @@ def notify(text, level=0):
 # If a command is coming in from a run script, then put it on the ipc and terminate this thread
 if len(sys.argv) > 1:
     param = sys.argv[1]
-    __ipc__.setProperty("malcommand", param)
+    __ipc__.setProperty("maltcommand", param)
 
     if len(sys.argv) > 2:
         params = ";".join(sys.argv[2:])
-        __ipc__.setProperty("malparam", params)
+        __ipc__.setProperty("maltparam", params)
     sys.exit()
 
 # If not processing a command, then this is the main service being started.
 # For whatever reason, Kodi will start the service twice after a fresh install, which cannot be allowed
-if __ipc__.getProperty("malinit"):
+if __ipc__.getProperty("maltinit"):
     log("KILLING DUPLICATE SERVICE INSTANCE")
     sys.exit()
-__ipc__.setProperty("malinit", "false")  # Claim this instance as main one. kill the rest.
+__ipc__.setProperty("maltinit", "false")  # Claim this instance as main one. kill the rest.
 
 # Ensure the profile folder exists, for the db and jar
 if not os.path.exists(__profile__):
@@ -77,11 +81,12 @@ sys.path.append(lib)
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
-
 class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the playback and file notifications
+    _svc_cache = {}
+
     """Main Service"""
     def __init__(self):
-        __ipc__.setProperty("malready", "false")
+        __ipc__.setProperty("maltready", "false")
         super(Main, self).__init__()
 
         # Build list of watch extensions from the supported media list
@@ -99,21 +104,18 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         self._updatethread = None
         self._shutdown = Event()
         self._iolock = Lock()
-        self._badauth = False
+        self._allow_update = __addon__.getSetting("maltAllowUpdate") == "true"
 
         # If this is the first time this addon has ever been run, then popup a brief welcome message and
         #   a convenience option to open the setting panel immediately.
-        if not __addon__.getSetting("malFirstRun"):
-            __addon__.setSetting("malFirstRun", "true")
+        if not __addon__.getSetting("maltFirstRun"):
+            __addon__.setSetting("maltFirstRun", "true")
             if xbmcgui.Dialog().yesno(getstring(316), getstring(317)):
                 __addon__.openSettings()
 
         # Grab settings
-        user = __addon__.getSetting("malUser")
-        password =  __addon__.getSetting("malPass")
-        libpath = __addon__.getSetting("malLibraryPath")
+        libpath = __addon__.getSetting("maltLibraryPath")
         sync = False
-        self._badauth = not user or not password  # Set initial state, based on if these are filled in
 
         # Emit a notification error, if the library path is no longer valid
         if libpath and not os.path.isdir(libpath):
@@ -123,7 +125,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         try:
             rel_needsupdate = True
             if Relationships.load(__relfile__):
-                rel_last = __addon__.getSetting("malRelLastUpdate")
+                rel_last = __addon__.getSetting("maltRelLastUpdate")
                 if rel_last:
                     try:
                         # The relationships file doesnt update very often, so only download a fresh copy every couple days.
@@ -137,15 +139,20 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
 
             # If updating, then grab the latest copy from github, then mark the date
             if rel_needsupdate and Relationships.update(__relfile__):
-                __addon__.setSetting("malRelLastUpdate", datetime.datetime.now().strftime("%Y-%m-%d"))
+                __addon__.setSetting("maltRelLastUpdate", datetime.datetime.now().strftime("%Y-%m-%d"))
         except:
             # something went wrong while parsing the relationship data. notify the user that season pairing will be off.
             notify(getstring(223), 2)
 
+        # Create the service handler
+        self._service = self.getService()
+        if self._service:
+            log("Initializing with service: {0}".format(self._service.id))
+
         # Create the video database
-        self._db = AnimeDatabase(__dbfile__, user, password, libpath)
-        if user:
-            if __addon__.getSetting("malAutoSync") == "true":
+        self._db = AnimeDatabase(__profile__, self._service, libpath)
+        if self._service.cansync:
+            if __addon__.getSetting("maltAutoSync") == "true":
                 sync = True
             elif not self._db and xbmcgui.Dialog().yesno(__addonname__, getstring(202)):  # no entries. sync now?
                 sync = True
@@ -154,13 +161,39 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         if sync:
             self.sync()
         else:
+            # Since the main sync is disabled, check the push queue separately
+            self.push_queue()
+
             # Search for available episodes and then write the database to the jar.
             self._db.find_episodes()
             self.updatejar()
 
         # Start the main service loop
-        __ipc__.setProperty("malinit", "true")  # We are ready to go
+        __ipc__.setProperty("maltinit", "true")  # We are ready to go
         self.daemon()
+
+    def getService(self):
+        id = __addon__.getSetting("maltService") or __svc_def__
+        if id in Main._svc_cache:
+            return Main._svc_cache[id]
+
+        try:
+            cls = __services__[id]
+        except:
+            #Bad service id, so switch to the default and notify the user. Existing db will get wrecked.
+            notify(getstring(224), 1)
+            id = __svc_def__
+            __addon__.setSetting("maltService", id)
+
+            if id in Main._svc_cache:
+                return Main._svc_cache[id]
+            cls = __services__[id]
+
+        svc = cls(__addon__)
+        if isinstance(svc, AnimeService):
+            Main._svc_cache[id] = svc
+            return svc
+        return None
 
     def onPlayBackStarted(self):
         """KODI PLAYER: playback was started"""
@@ -174,7 +207,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         filepath = self.getPlayingFile()
 
         # If the user is allowing any file to trip an update, then skip these checks
-        if __addon__.getSetting("malUpdateAny") != "true":
+        if __addon__.getSetting("maltUpdateAny") != "true":
             # No library, so just cancel out
             if not self._db.library:
                 return
@@ -190,15 +223,15 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         basefile = os.path.basename(filepath)
         anime, title, start, end = self._db.resolve(basefile)
         if anime is None:
-            if __addon__.getSetting("malShowUknown") == "true":
+            if __addon__.getSetting("maltShowUknown") == "true":
                 # If the title could not be found in the database, then emit a warning
                 notify(getstring(213).format(title), 1)
         else:
             # If the file represents multiple episodes (such as a special), then advance to the very end
-            self._lastanime, self._lastepisode = self._db.map(anime, end)  # need to map, as resolve doesnt do it
+            self._lastanime, self._lastepisode = self._db.map_episode(anime, end)  # need to map, as resolve doesnt do it
 
             # Show what's playing
-            if __addon__.getSetting("malShowPlaying") == "true":
+            if __addon__.getSetting("maltShowPlaying") == "true":
                 episodes = self._lastanime.episodes
                 if episodes == 0:
                     episodes = "?"
@@ -212,7 +245,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
 
         # Since the user manually stopped, check to see if the minimum playback time has elapsed before updating
         timelapse = (datetime.datetime.now() - self._playstart).seconds
-        minseconds = int2(__addon__.getSetting("malMinSeconds"))
+        minseconds = int2(__addon__.getSetting("maltMinSeconds"))
         if timelapse > minseconds:
             self.onPlayBackEnded()
 
@@ -230,18 +263,18 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
 
     def on_created(self, event):
         """WATCHDOG: A file was created"""
-        if self._db.add(event.src_path):
+        if self._db.add_episode(event.src_path):
             with self._iolock:
-                __ipc__.setProperty("malready", "false")
+                __ipc__.setProperty("maltready", "false")
                 self._db.save()
                 self.updatejar()
             xbmc.executebuiltin('Container.Refresh()')
 
     def on_deleted(self, event):
         """WATCHDOG: A file was deleted"""
-        if self._db.remove(event.src_path):
+        if self._db.remove_episode(event.src_path):
             with self._iolock:
-                __ipc__.setProperty("malready", "false")
+                __ipc__.setProperty("maltready", "false")
                 self._db.save()
                 self.updatejar()
             xbmc.executebuiltin('Container.Refresh()')
@@ -252,7 +285,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
             fs = open(__picklejar__, "wb")
             pickle.dump(self._db, fs, pickle.HIGHEST_PROTOCOL)
             fs.close()
-            __ipc__.setProperty("malready", "true")
+            __ipc__.setProperty("maltready", "true")
             return True
 
         except Exception, e:
@@ -264,35 +297,58 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         """Saves the local database to disk"""
         with self._iolock:
             # Inform the components that an update is underway
-            __ipc__.setProperty("malready", "false")
+            __ipc__.setProperty("maltready", "false")
 
             # Save the database and update the jar
             self._db.save()
             self.updatejar()  # Ready flag is set inside
 
+    def authenticate(self):
+        if not isinstance(self._service, AnimeService):
+            log("Unable to authenticate: no service handler available")
+            notify("Cannot proceed as there is no active service handler.", 2)
+            return False
+
+        return self._service.authenticate()
+
     def sync(self):
         """Syncs the local database with MAL"""
+
+        if not isinstance(self._service, AnimeService):
+            log("Critical sync error: no service handler available")
+            notify(getstring(203), 2)  # Sync failed
+            return False
+
         with self._iolock:
-            __ipc__.setProperty("malready", "false")
+            __ipc__.setProperty("maltready", "false")
             d = xbmcgui.DialogProgressBG()
             d.create(__addonname__, getstring(209))  # Sync starting
+            
+            def updater(percent):
+                d.update(int(percent * 0.40 * 100))
 
             try:
-                if self._db.sync():  # This is NOT bi-directional
+                if self._service.fetch(self._db, updater):
                     # If there are local changes that need to be pushed to MAL, then do so now
-                    d.update(33)
-                    if __addon__.getSetting("malAllowUpdate") == "true":
-                        for anime in self._db.pushlist:
+                    pushlist = list(self._db.pushlist)
+                    if pushlist and __addon__.getSetting("maltAllowUpdate") == "true":
+                        cnt = 1
+                        pushcount = len(pushlist)
+                        for anime in pushlist:
                             # Fail out if any of these error. A notification will already be on the screen
                             if not self.push(anime):
                                 return False
+                            percent = float(cnt) / pushcount
+                            d.update(int(percent * 0.80 * 100))
+                            cnt = cnt + 1
+                    else:
+                        d.update(80)
 
                     # Save changes to the local database
-                    d.update(66)
                     self._db.save()
-                    d.update(77)
+                    d.update(85)
                     self._db.find_episodes()
-                    d.update(88)
+                    d.update(95)
                     self.updatejar()
                     d.update(100)
 
@@ -301,24 +357,73 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                     return True
 
             except Exception, e:
-                log("Exception thrown during sync: " + str(e))
+                log("Exception thrown during sync:")
+                for msg in e.args:
+                    if isinstance(msg, Exception):
+                        log(msg.strerror)
+                    else:
+                        log(str(msg))
 
-            __ipc__.setProperty("malready", "true")  # normally set when updating the jar
+            __ipc__.setProperty("maltready", "true")  # normally set when updating the jar
             d.close()
             notify(getstring(203), 2)  # Sync failed
             return False
 
+    def push_queue(self):
+        pushlist = list(self._db.pushlist)
+        if pushlist and __addon__.getSetting("maltAllowUpdate") == "true":
+            d = xbmcgui.DialogProgressBG()
+            d.create(__addonname__, getstring(209))  # Sync starting
+            cnt = 1
+            pushcount = len(pushlist)
+            for anime in pushlist:
+                if not self.push(anime):
+                    return False
+                percent = float(cnt) / pushcount
+                d.update(int(percent * 100))
+                cnt = cnt + 1
+            self._db.save() # Save progress updates
+
     def process_settings(self):
         """Checks to see if there have been changes to a few key service settings, and applies them as needed"""
-        monitorlib = __addon__.getSetting("malMonitorLibrary") == "true"
+        monitorlib = __addon__.getSetting("maltMonitorLibrary") == "true"
         if self._observer is not None and not monitorlib:
             # turn off monitoring if the setting is off, but there is an active instance running
             self._observer.stop()
             self._observer.join()
             self._observer = None
 
+        # Check if the selected service handler has changed
+        svc = self.getService()
+        if self._service != svc and self._db:
+            if xbmcgui.Dialog().yesno(__addonname__, getstring(338)):
+                # set service and clear db
+                self._service = svc
+                self._db.service = svc
+
+                # if service has previous auth saved, then ask if the user wants to sync now
+                if self._service.cansync:
+                    sync = False
+                    if __addon__.getSetting("maltAutoSync") == "true":
+                        sync = True
+                    elif not self._db and xbmcgui.Dialog().yesno(__addonname__, getstring(202)):  # no entries. sync now?
+                        sync = True
+
+                    if sync:
+                        self.sync()
+                else:
+                    xbmcgui.Dialog().ok(__addonname__, getstring(339))
+            else:
+                # revert setting back to the previous service
+                idx = __svc_def__
+                for key in __services__:
+                    if isinstance(self._service, __services__[key]):
+                        idx = key
+                        break
+                __addon__.setSetting("maltService", idx)
+
         # Check if the library path has been changed since launch
-        libpath = __addon__.getSetting("malLibraryPath")
+        libpath = __addon__.getSetting("maltLibraryPath")
         if libpath != self._db.library:
             self._db.library = libpath
             with self._iolock:
@@ -343,29 +448,22 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                 self._observer = None
 
         # Check if the user has been changed since launch
-        resetauth = False
-        user = __addon__.getSetting("malUser")
-        if user != self._db.user:
-            resetauth = True
-            self._db.user = user  # This will empty the database
+        if self._service.authchanged and self._service.cansync:
             if xbmcgui.Dialog().yesno(__addonname__, getstring(206)):  # Sync now?
                 self.sync()
             else:
                 self.save()
 
-        # Check if the password has been changed since launch
-        password = __addon__.getSetting("malPass")
-        if password != self._db.password:
-            resetauth = True
-            self._db.password = password
-
-        # Prevent possible race condition with the update thread, if user is changing both user and password
-        if resetauth:
-            self._badauth = False
+        # If the allow update setting has been turned on recently, then push any queued items
+        # only do this once per enable: the full queue is pushed at startup, and individuals are pushed on demand
+        updateenabled = __addon__.getSetting("maltAllowUpdate") == "true"
+        if updateenabled and not self._allow_update:
+            self.push_queue()
+        self._allow_update = updateenabled # this is cheaper than hitting a yield list every tick
 
         # Start/Stop the update thread based on config or if the user resolved auth issues
-        updateenabled = __addon__.getSetting("malUpdateEnabled") == "true"
-        if updateenabled and not self._badauth and self._updatethread is None:
+        updateenabled = __addon__.getSetting("maltUpdateEnabled") == "true"
+        if updateenabled and self._service.cansync and self._updatethread is None:
             self._shutdown.clear()  # Reset the shutdown event in case it was tripped earlier
             self._updatethread = Thread(target=self.updatelist)
             self._updatethread.start()
@@ -377,26 +475,30 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
 
     def process_commands(self):
         """Check for any IPC commands from the components"""
-        command = __ipc__.getProperty("malcommand")
+        command = __ipc__.getProperty("maltcommand")
         if command:
-            params =  __ipc__.getProperty("malparam").split(";")
+            params =  __ipc__.getProperty("maltparam").split(";")
 
             # Clear ipc
-            __ipc__.setProperty("malcommand", "")  # Clear the command
-            __ipc__.setProperty("malparam", "")  # Clear the params
+            __ipc__.setProperty("maltcommand", "")  # Clear the command
+            __ipc__.setProperty("maltparam", "")  # Clear the params
 
             # If a sync is being requested then sync, save, and update the pickle jar
             if command == "sync":
-                if not self._db.user:
-                    notify(getstring(212), 2)  # unable to sync, no user
+                if not self._service.cansync:
+                    xbmcgui.Dialog().ok(__addonname__, getstring(212))  # unable to sync, bad auth
                     return
                 self.sync()
+
+            # Handle authentication requests
+            elif command == "authenticate":
+                self.authenticate()
 
             # Force an episode scan
             elif command == "scan":
                 d = xbmcgui.DialogProgressBG()
                 d.create(__addonname__, getstring(216))  # scanning...
-                __ipc__.setProperty("malready", "false")
+                __ipc__.setProperty("maltready", "false")
                 with self._iolock:
                     if self._db.find_episodes():
                         self.updatejar()
@@ -407,15 +509,15 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                 d = xbmcgui.DialogProgressBG()
                 d.create(__addonname__, getstring(218))  # updating...
                 if Relationships.update(__relfile__):
-                    __addon__.setSetting("malRelLastUpdate", datetime.datetime.now().strftime("%Y-%m-%d"))
-                    __ipc__.setProperty("malready", "false")
+                    __addon__.setSetting("maltRelLastUpdate", datetime.datetime.now().strftime("%Y-%m-%d"))
+                    __ipc__.setProperty("maltready", "false")
                     with self._iolock:
                         if self._db.find_episodes():
                             self.updatejar()
                     d.close()
                 else:
                     d.close()
-                    notify(getstring(220))  # failure
+                    xbmcgui.Dialog().ok(__addonname__, getstring(220))  # failure
 
             # Show a series of choices for changing the show status
             elif command == "setstatus":
@@ -470,11 +572,11 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                     key = params[0]
                     if key in self._db:
                         anime = self._db[key]
-                        previous = anime.usersynonyms
+                        previous = "; ".join(anime.usersynonyms)
                         newvalue = xbmcgui.Dialog().input("Enter title synonyms, separate with semi-colon:", previous)
 
                         if newvalue != "" and newvalue != previous:
-                            anime.set_user_synonyms(newvalue)
+                            anime.usersynonyms = newvalue
                             self._db.find_episodes()
                             self.save()
                             xbmc.executebuiltin('Container.Refresh()')
@@ -488,7 +590,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                     key = params[0]
                     if key in self._db:
                         anime = self._db[key]
-                        anime.set_user_synonyms("")
+                        anime.usersynonyms = []
                         self.save()  # pointless to update episodes on a clear. episodes are bonded until a restart
 
                 except ValueError:
@@ -524,7 +626,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
             self.save()
 
             # Only push the progress if the user wants to do it immediately, otherwise wait for a sync
-            if __addon__.getSetting("malUpdateOnSync") == "false":
+            if __addon__.getSetting("maltUpdateProgress") == "true":
                 self.push(anime)
 
             return True
@@ -532,43 +634,33 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
 
     def push(self, anime):
         """Push the update to MAL, if enabled"""
-        allow_update = __addon__.getSetting("malAllowUpdate") == "true"
-        user = __addon__.getSetting("malUser")
-        password = __addon__.getSetting("malPass")
+        allow_update = __addon__.getSetting("maltAllowUpdate") == "true"
         if allow_update:
-            if user and password and not self._badauth:
-                encodedauth = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
-                headers = {'Content-Type': 'application/x-www-form-urlencoded',
-                           'Authorization': 'Basic %s' % encodedauth}
-                data = urllib.urlencode(
-                    {'data': '<entry><status>{0}</status><episode>{1}</episode></entry>'.format(anime.status, anime.watched)})
-                url = "https://myanimelist.net/api/animelist/update/{0}.xml".format(anime.id)
-
+            if self._service.cansync:
                 try:
-                    req = urllib2.Request(url, data, headers)
-                    response = urllib2.urlopen(req)
-                    output = response.read()
-                    if output == "Updated":
-                        # Flag the item as synced then finalize
-                        anime.synced()
-                        return True
-
-                    log("MAL update failed: Authentication was successful, but API did not return 'Updated'")
-                    log("MAL response: {0}".format(output))
-                    notify(getstring(215), 2)  # Unknown Error
+                    return self._service.push(anime)
 
                 except urllib2.HTTPError, e:
                     if e.code == 401:
-                        self._badauth = True
                         notify(getstring(200), 2)  # Bad user or password
                     elif e.code == 400:
-                        log("MAL update failed: Bad Request")
+                        log("Service update failed: Bad Request")
                         notify(getstring(214), 2)
                     else:
-                        log("MAL update failed: Error code {0} was received".format(e.code))
+                        log("Service update failed: Error code {0} was received".format(e.code))
                         notify(getstring(215), 2)  # Unknown Error
-            elif not self._badauth:
-                notify(getstring(205), 2)  # Update is on, but no password
+
+                except Exception, e:
+                    log("An error occurred inside the service handler while pushing:")
+                    for msg in e.args:
+                        if isinstance(msg, Exception):
+                            log(msg.strerror)
+                        else:
+                            log(str(msg))
+                    notify(getstring(215), 2)  # Unknown Error
+
+            elif not self._service._badauth:
+                notify(getstring(205), 2)  # Update is on, but credentials are bad
         return False
 
     def updatelist(self):
@@ -584,12 +676,12 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
 
         d = xbmcgui.DialogProgressBG()
         visible = False
-        minimum_time = int2(__addon__.getSetting("malUpdateTime"), 4)
+        minimum_time = int2(__addon__.getSetting("maltUpdateTime"), 4)
         throttle = minimum_time
 
         while not self._shutdown.is_set():
             # Do not make an attempt if the user/password is known to be invalid
-            if not self._badauth and self._db.updatecount > 0:
+            if self._service.cansync and self._db.updatecount > 0:
                 # Rate throttle these requests, otherwise you will be asking for the ban hammer
                 if (datetime.datetime.now() - lastupdate).seconds > throttle:
                     throttle = minimum_time  # Reset throttle in case it was changed during error handling
@@ -605,8 +697,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                         d.update(percent, message=anime.title)
 
                         # Perform the update on the next item in the queue
-                        if not self._db.updatenext():
-                            anime.synopsis = getstring(222)  # Unable to retrieve synopsis info
+                        self._db.updatenext()
 
                         # Don't spam IO operations. Save the db after a reasonable number of searches are done
                         if batchcnt >= batchout or cntleft == 0:
@@ -624,17 +715,16 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                         totalcnt += 1
 
                     except urllib2.HTTPError, e:
-                        # MAL Server Error
+                        # Service Error
                         d.close()
                         visible = False
 
-                        if e.code == 401:
-                            log("MAL authentication rejected")
-                            self._badauth = True
+                        if not self._service.cansync:
+                            log("Service authentication rejected")
                             notify(getstring(200), 2)  # Bad user or password
                         else:
                             # Possibly some network problems going on, so lets wait a bit before retrying
-                            log("MAL HTTP error: {0}".format(e.code))
+                            log("Service HTTP error: {0}".format(e.code))
                             retrycnt += 1
                             throttle = 60
 
@@ -654,7 +744,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                         if batchcnt > 0:
                             self.save()
                         xbmcgui.Dialog().ok(__addonname__, getstring(332))  # Too many failed attempts
-                        __addon__.setSetting("malUpdateEnabled", "false")  # turn the update setting off
+                        __addon__.setSetting("maltUpdateEnabled", "false")  # turn the update setting off
                         break  # Kill the thread. User will have to turn the setting back on to get this going again.
                     elif retrycnt > 0:
                         notify(getstring(333).format(retrycnt, maxattempts), 2)  # Attempt x/y
@@ -669,7 +759,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
             time.sleep(0.1)
 
             # Allow user to change the throttle without having to restart the thread
-            minimum_time = int2(__addon__.getSetting("malUpdateTime"), 4)
+            minimum_time = int2(__addon__.getSetting("maltUpdateTime"), 4)
 
         log("service update thread stopped")
 
@@ -678,7 +768,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
         monitor = self._monitor
 
         # Start watching for file changes, if enabled
-        if self._db.library and __addon__.getSetting("malMonitorLibrary") == "true":
+        if self._db.library and __addon__.getSetting("maltMonitorLibrary") == "true":
             try:
                 self._observer = Observer()
                 self._observer.schedule(self, self._db.library, True)
@@ -688,7 +778,7 @@ class Main(xbmc.Player, PatternMatchingEventHandler):  # Subclasses for the play
                 self._observer = None
 
         # Start the synopsis update thread, if enabled
-        if __addon__.getSetting("malUpdateEnabled") == "true":
+        if __addon__.getSetting("maltUpdateEnabled") == "true":
             self._updatethread = Thread(target=self.updatelist)
             self._updatethread.start()
 

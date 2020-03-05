@@ -16,20 +16,19 @@ except ImportError:
 
 __url__       = sys.argv[0]
 __handle__    = int2(sys.argv[1])
-__addon__     = xbmcaddon.Addon(id="service.maltracker")
-__addonid__   = __addon__.getAddonInfo('id')
+__addonid__   = "service.maltracker"
+__addon__     = xbmcaddon.Addon(id=__addonid__)
 __addonname__ = __addon__.getAddonInfo('name')
 __profile__   = xbmc.translatePath(__addon__.getAddonInfo("profile"))
-__svcpath__   = os.path.join(__addon__.getAddonInfo("path"), 'service.py')
 __picklejar__ = os.path.join(__profile__, 'db.bin')
 __ipc__       = xbmcgui.Window(10000) # command ipc marshaller
 xbmcplugin.setContent(__handle__, 'episodes')
 
-show_progress = __addon__.getSetting("malShowProgress") == "true"
-show_avail    = __addon__.getSetting("malShowAvailable") == "true"
-ind_nodes     = int2(__addon__.getSetting("malIndNodes"), 13)
-ind_wrap      = int2(__addon__.getSetting("malIndWrap"), 13)
-ind_offset    = int2(__addon__.getSetting("malIndOffset"), 3)
+show_progress = __addon__.getSetting("maltShowProgress") == "true"
+show_avail    = __addon__.getSetting("maltShowAvailable") == "true"
+ind_nodes     = int2(__addon__.getSetting("maltIndNodes"), 13)
+ind_wrap      = int2(__addon__.getSetting("maltIndWrap"), 13)
+ind_offset    = int2(__addon__.getSetting("maltIndOffset"), 3)
 
 def get_url(**kwargs):
     return '{0}?{1}'.format(__url__, urlencode(kwargs))
@@ -126,16 +125,27 @@ def buildvideoitem(anime):
     description = u""
     if show_progress:
         description += buildprogressbar(anime)
-    description += getstring(323).format(translatetype(anime.type)) + "\n\n"  # Type: x
-    description += (anime.synopsis or getstring(324)) + "\n\n"
+    description += getstring(323).format(translatetype(anime.type)) # Type: x
+    if anime.datenextair:
+        if anime.nextairepisode:
+            description += "\n#" + str(anime.nextairepisode) + " airs on "
+        else:
+            description += "\nAirs on "
+        description += anime.datenextair.strftime("%b %d @ %I:%M %p")
+    description += "\n\n" + (anime.synopsis or getstring(324)) + "\n\n"
 
     # Set show info
-    list_item.setInfo('video', {'title': title,
-                                'originaltitle': anime.title,
-                                'plot': description,
-                                'episode': nextepisode,
-                                'tvshowtitle': anime.title,
-                                'lastplayed': anime.updated.strftime('%Y-%m-%d %H:%M:%S')})
+    info = {
+        'title': title,
+        'originaltitle': anime.title,
+        'plot': description,
+        'episode': nextepisode,
+        'tvshowtitle': anime.title
+    }
+    if anime.updated:
+        info["lastplayed"] = anime.updated.strftime('%Y-%m-%d %H:%M:%S')
+
+    list_item.setInfo('video', info)
 
     # Set video type
     if anime.type == 1:  # TV
@@ -151,13 +161,13 @@ def buildvideoitem(anime):
     # Create context menu options
     context = []
     if anime.episodes == 0 or nextepisode <= anime.episodes:
-        context.append((getstring(300).format(nextepisode), 'RunScript({0},inc,{1})'.format(__svcpath__, anime.id)))
+        context.append((getstring(300).format(nextepisode), 'RunScript({0},inc,{1})'.format(__addonid__, anime.id)))
     if prevepisode > 0 and (anime.episodes == 0 or prevepisode <= anime.episodes):
-        context.append((getstring(301).format(prevepisode), 'RunScript({0},dec,{1})'.format(__svcpath__, anime.id)))
-    context.append((getstring(314), 'RunScript({0},setstatus,{1})'.format(__svcpath__, anime.id)))
-    context.append((getstring(318), 'RunScript({0},syn,{1})'.format(__svcpath__, anime.id)))
+        context.append((getstring(301).format(prevepisode), 'RunScript({0},dec,{1})'.format(__addonid__, anime.id)))
+    context.append((getstring(314), 'RunScript({0},setstatus,{1})'.format(__addonid__, anime.id)))
+    context.append((getstring(318), 'RunScript({0},syn,{1})'.format(__addonid__, anime.id)))
     if anime.usersynonyms:
-        context.append((getstring(319), 'RunScript({0},syndelete,{1})'.format(__svcpath__, anime.id)))
+        context.append((getstring(319), 'RunScript({0},syndelete,{1})'.format(__addonid__, anime.id)))
     list_item.addContextMenuItems(context)
 
     # Create the link for playback
@@ -184,8 +194,8 @@ if __name__ == '__main__':
     attempts = 0
     db = None
     while attempts < 20:  # Wait up to 20 seconds
-        init = __ipc__.getProperty("malinit") == "true"
-        ready = __ipc__.getProperty("malready") == "true"
+        init = __ipc__.getProperty("maltinit") == "true"
+        ready = __ipc__.getProperty("maltready") == "true"
 
         # The service needs to be fully up and running and not in the middle of a sync
         if init and ready:
@@ -233,17 +243,17 @@ if __name__ == '__main__':
         path = urlparse.urlparse(__url__).path
 
         # Build the status folders
-        if path == "//current":
+        if path == "/current":
             buildfolder(db.ready)
-        elif path == "//watching":
+        elif path == "/watching":
             buildfolder(db.statuslist(1))
-        elif path == "//completed":
+        elif path == "/completed":
             buildfolder(db.statuslist(2))
-        elif path == "//onhold":
+        elif path == "/onhold":
             buildfolder(db.statuslist(3))
-        elif path == "//dropped":
+        elif path == "/dropped":
             buildfolder(db.statuslist(4))
-        elif path == "//plantowatch":
+        elif path == "/plantowatch":
             buildfolder(db.statuslist(6))
         else:
             # If at the root, then build out the list of status folders to traverse

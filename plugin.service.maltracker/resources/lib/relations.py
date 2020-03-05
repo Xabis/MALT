@@ -7,15 +7,16 @@ import os
 import re
 import urllib2
 
-
 class Rule(object):
     """Episode redirection rule"""
     def __init__(self, match=None):
+        self.srcid = []
         self.srcstart = 0
         self.srcend = 0
-        self.destid = ""
+        self.destid = []
         self.deststart = 0
         self.destend = 0
+        self.redirected = False
 
         if match is not None:
             self.populate(match)
@@ -30,19 +31,23 @@ class Rule(object):
             return 0
 
     def populate(self, match):
-        destmal, destkit, destadb = match.group(4).split("|")
+        self.srcid = match.group(1).split("|")         # left service id list
+        self.srcstart = Rule.safeint(match.group(2))   # left ep start
+        self.srcend = Rule.safeint(match.group(3))     # left ep end
+        self.destid = match.group(4).split("|")        # right service id list
+        self.deststart = Rule.safeint(match.group(5))  # right ep start
+        self.destend = Rule.safeint(match.group(6))    # right ep end
+        self.redirected = match.group(7) == "!"        # self-redirect marker
 
-        self.srcstart = Rule.safeint(match.group(2))
-        self.srcend = Rule.safeint(match.group(3))
-        self.destid = destmal
-        self.deststart = Rule.safeint(match.group(5))
-        self.destend = Rule.safeint(match.group(6))
-
+        # Tilde indicates that the source id should be repeated
+        for idx, id in enumerate(self.destid):
+            if (id == "~"):
+                self.destid[idx] = self.srcid[idx]
 
 class Relationships(object):
     """Keeps a list of episode redirection rules, used when fansubbers do not restart episode numbers over, across one or more cours"""
-    _re_ruleset = re.compile("((?:\d+|[?~])(?:\|(?:\d+|[?~]))*):(\d+)(?:-(\d+|\?))? -> ((?:\d+|[?~])(?:\|(?:\d+|[?~]))*):(\d+)(?:-(\d+|\?))?(!)?")
-    rules = {}
+    _re_ruleset = re.compile("((?:(?:\d+|[?~])(?:\||))+):(\d+)(?:-(\d+|\?))? -> ((?:(?:\d+|[?~])(?:\||))+):(\d+)(?:-(\d+|\?))?(!)?")
+    lookup = {}
     meta = {}
 
     @staticmethod
@@ -54,7 +59,7 @@ class Relationships(object):
                 fs.close()
 
                 Relationships.parse(text)
-                if Relationships.rules:
+                if Relationships.lookup:
                     return True
             except IOError:
                 pass
@@ -78,7 +83,7 @@ class Relationships(object):
 
             # Parse the relationship file
             Relationships.parse(text)
-            if Relationships.rules:
+            if Relationships.lookup:
                 return True
         except:
             pass
@@ -88,7 +93,8 @@ class Relationships(object):
     @staticmethod
     def parse(text):
         # Remove any existing rules
-        Relationships.rules.clear()
+        Relationships.lookup.clear()
+        Relationships.meta.clear()
 
         for line in text.split("\n"):
             # Only care about rules
@@ -97,25 +103,37 @@ class Relationships(object):
                 raw = line[2:]
                 m = Relationships._re_ruleset.match(raw)
                 if m:
-                    srcmal, srckit, srcadb = m.group(1).split("|")
-                    destmal, destkit, destadb = m.group(4).split("|")
-
                     # Create the rule
-                    Relationships.rules[srcmal] = Rule(m)
+                    rule = Rule(m)
+
+                    # Map the rule by service id
+                    for idx, id in enumerate(rule.srcid):
+                        if idx not in Relationships.lookup:
+                            Relationships.lookup[idx] = {}
+                        Relationships.lookup[idx][id] = rule
+
                     # If the rule requires a self-redirect, then create it now
-                    if m.group(7) == "!":
-                        Relationships.rules[destmal] = Rule(m)
+                    if rule.redirected:
+                        for idx, id in enumerate(rule.destid):
+                            Relationships.lookup[idx][id] = rule
+
                 elif ":" in raw:
                     # Meta data
                     key, value = raw.split(": ")
                     Relationships.meta[key] = value
 
     @staticmethod
-    def find(sid, episode):
-        if sid in Relationships.rules:
-            rule = Relationships.rules[sid]
-            if episode >= rule.srcstart and (rule.srcend == 0 or episode <= rule.srcend):
-                offset = episode - rule.srcstart
-                mapped = rule.deststart + offset
-                return rule.destid, mapped
+    def get(serviceid, animeid):
+        try:
+            return Relationships.lookup.get(serviceid).get(animeid)
+        except:
+            return None
+
+    @staticmethod
+    def find(serviceid, animeid, episode):
+        rule = Relationships.get(serviceid, animeid)
+        if rule and episode >= rule.srcstart and (rule.srcend == 0 or episode <= rule.srcend):
+            offset = episode - rule.srcstart
+            mapped = rule.deststart + offset
+            return rule.destid, mapped
         return "", 0
